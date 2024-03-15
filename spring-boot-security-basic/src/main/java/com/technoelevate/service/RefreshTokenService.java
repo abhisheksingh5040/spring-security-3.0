@@ -44,15 +44,15 @@ public class RefreshTokenService {
                             .accessToken(accessToken)
                             .refreshToken(request.getRefreshToken())
                             .build();
-                }).orElseThrow(()->new RuntimeException("Refresh token is not present in DB"));
+                }).orElseThrow(() -> new RuntimeException("Refresh token is not present in DB"));
     }
 
-    private Optional<RefreshToken> checkRefreshToken(String token){
+    private Optional<RefreshToken> checkRefreshToken(String token) {
         return refreshTokenRepository.findByToken(token);
     }
 
-    private RefreshToken validateRefreshToken(RefreshToken refreshToken){
-        if(refreshToken.getExpiryDate().compareTo(Instant.now())<0){
+    private RefreshToken validateRefreshToken(RefreshToken refreshToken) {
+        if (refreshToken.getExpiryDate().compareTo(Instant.now()) < 0) {
             refreshTokenRepository.delete(refreshToken);
             throw new RuntimeException("Refresh token expired!!!!");
         }
