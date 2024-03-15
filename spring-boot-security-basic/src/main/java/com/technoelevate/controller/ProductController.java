@@ -1,11 +1,11 @@
 package com.technoelevate.controller;
 
-import com.technoelevate.dto.AuthRequest;
-import com.technoelevate.dto.Product;
-import com.technoelevate.dto.UserDTO;
+import com.technoelevate.dto.*;
+import com.technoelevate.entity.RefreshToken;
 import com.technoelevate.entity.UserInfo;
 import com.technoelevate.service.JwtService;
 import com.technoelevate.service.ProductService;
+import com.technoelevate.service.RefreshTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +27,9 @@ public class ProductController {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private RefreshTokenService refreshTokenService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -54,13 +57,20 @@ public class ProductController {
     }
 
     @PostMapping("/authenticate")
-    public String authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
+    public JwtResponse authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUserName(), authRequest.getPassword()));
         if (authenticate.isAuthenticated()) {
-            return jwtService.generateToken(authRequest.getUserName());
+            return JwtResponse.builder().accessToken(jwtService.generateToken(authRequest.getUserName()))
+                    .refreshToken(refreshTokenService.createRefreshToken(authRequest.getUserName()).getToken())
+                    .build();
         } else {
             throw new UsernameNotFoundException("Invalid User !!!");
         }
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<JwtResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(refreshTokenService.refreshToken(request));
     }
 
 }
